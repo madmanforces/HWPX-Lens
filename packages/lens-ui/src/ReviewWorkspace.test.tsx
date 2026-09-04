@@ -15,6 +15,37 @@ const SPECIALIZED_PROFILE: ProductProfile = {
 };
 
 describe("ReviewWorkspace", () => {
+  it("uses the same configured action-button UI for collapse and detach", () => {
+    const markup = renderToStaticMarkup(<ReviewWorkspace
+      tab="structure"
+      structure={[]}
+      structureScoped={false}
+      changes={[]}
+      counts={{
+        all: 0, text: 0, whitespace: 0, outline: 0, "special-table": 0, table: 0,
+        "captioned-image": 0, "other-image": 0,
+      }}
+      filter="all"
+      selectedIndex={0}
+      comparing={false}
+      ready={false}
+      productProfile={GENERAL_DOCUMENT_PROFILE}
+      onTabChange={vi.fn()}
+      onStructureSelect={vi.fn()}
+      onStructureClear={vi.fn()}
+      onChangeSelect={vi.fn()}
+      onFilterChange={vi.fn()}
+      onPrevious={vi.fn()}
+      onNext={vi.fn()}
+      onDetachToggle={vi.fn()}
+      onCollapseToggle={vi.fn()}
+    />);
+
+    expect(markup).toContain('class="review-workspace__action collapse-workspace"');
+    expect(markup).toContain('aria-label="검토 작업공간 접기"');
+    expect(markup).toContain('class="review-workspace__action detach-workspace"');
+  });
+
   it("collapses to a narrow, count-preserving document control", () => {
     const markup = renderToStaticMarkup(<ReviewWorkspace
       collapsed

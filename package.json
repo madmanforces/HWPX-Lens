@@ -1,6 +1,6 @@
 {
   "name": "hwpx-lens",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "Offline-first HWPX comparison and review desktop app",
@@ -39,6 +39,8 @@
     "@rhwp/core": "0.8.6",
     "@types/node": "22.18.1",
     "@vitejs/plugin-react": "6.1.1",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "cross-env": "^7.0.3",
     "jsdom": "26.1.0",
     "typescript": "5.9.2",

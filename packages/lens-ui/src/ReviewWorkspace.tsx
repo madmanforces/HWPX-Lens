@@ -85,11 +85,23 @@ export function ReviewWorkspace(props: ReviewWorkspaceProps) {
         </div>
         <div className="review-workspace__actions">
           {!props.detached && props.onCollapseToggle && (
-            <button type="button" className="collapse-workspace" onClick={props.onCollapseToggle}>
+            <button
+              type="button"
+              className="review-workspace__action collapse-workspace"
+              onClick={props.onCollapseToggle}
+              aria-expanded="true"
+              aria-label="검토 작업공간 접기"
+              title="검토 작업공간 접기"
+            >
               접기
             </button>
           )}
-          <button type="button" className="detach-workspace" onClick={props.onDetachToggle}>
+          <button
+            type="button"
+            className="review-workspace__action detach-workspace"
+            onClick={props.onDetachToggle}
+            title={props.detached ? "검토 작업공간을 본창으로 복귀" : "검토 작업공간 분리"}
+          >
             {props.detached ? "본창으로" : "분리"}
           </button>
         </div>

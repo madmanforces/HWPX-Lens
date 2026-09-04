@@ -10,6 +10,7 @@ import { LensApp } from "@hwpx-lens/lens-ui";
 import { DetachedReviewApp } from "./DetachedReviewApp";
 import { initializeReviewWindowBridge } from "./review-window-bridge";
 import { PRODUCT_PROFILE } from "./product-profile";
+import { saveChangeSetFile } from "./save-change-set";
 import "@hwpx-lens/lens-ui/styles.css";
 
 const root = document.getElementById("root");
@@ -44,6 +45,13 @@ if (detachedReviewWorkspace) {
         diffAdapter={new RhwpDiffAdapter()}
         renderCachePages={renderCachePages}
         productProfile={PRODUCT_PROFILE}
+        changeSetGenerator={{
+          version: import.meta.env.VITE_HWPX_LENS_VERSION,
+          lensCoreVersion: import.meta.env.VITE_HWPX_LENS_CORE_VERSION,
+          adapterName: "rhwp",
+          adapterVersion: import.meta.env.VITE_HWPX_LENS_ADAPTER_VERSION,
+        }}
+        saveChangeSetFile={saveChangeSetFile}
       />
     </StrictMode>,
   );

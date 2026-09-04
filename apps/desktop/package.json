@@ -1,6 +1,6 @@
 {
   "name": "@hwpx-lens/desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,6 +16,8 @@
     "@hwpx-lens/lens-core": "0.0.1",
     "@hwpx-lens/lens-ui": "0.0.1",
     "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-dialog": "^2.7.3",
+    "@tauri-apps/plugin-fs": "^2.5.2",
     "react": "19.1.1",
     "react-dom": "19.1.1"
   },

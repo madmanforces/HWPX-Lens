@@ -1,5 +1,13 @@
 export { LensApp } from "./LensApp";
 export {
+  prepareChangeSetExport,
+  type ChangeSetGeneratorInfo,
+  type PreparedChangeSetExport,
+  type SaveChangeSetFile,
+  type SaveChangeSetRequest,
+  type SaveChangeSetResult,
+} from "./change-set-export";
+export {
   ReviewWorkspace,
   type DetachedReviewWorkspaceState,
   type ReviewWorkspaceAction,

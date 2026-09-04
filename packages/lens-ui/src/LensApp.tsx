@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  CHANGE_SET_PRIVACY_WARNING,
   buildReviewInkModel,
   documentAnalysisKey,
   pairAnalysisKey,
@@ -20,6 +21,11 @@ import {
   SessionAnalysisCache,
   type CachedChangeTargets,
 } from "./analysis-cache";
+import {
+  prepareChangeSetExport,
+  type ChangeSetGeneratorInfo,
+  type SaveChangeSetFile,
+} from "./change-set-export";
 import {
   changeCategory,
   changesInScope,
@@ -62,6 +68,7 @@ interface LoadedSide {
   status: LoadStatus;
   stage?: LoadStage;
   fileName?: string;
+  sourceFile?: File;
   document?: LensDocument;
   snapshot?: DocumentSnapshot;
   complexity?: DocumentComplexityProfile;
@@ -97,6 +104,8 @@ interface LensAppProps {
   diffAdapter: DiffAdapter;
   renderCachePages?: number;
   productProfile: ProductProfile;
+  changeSetGenerator?: ChangeSetGeneratorInfo;
+  saveChangeSetFile?: SaveChangeSetFile;
 }
 
 interface ReviewInkBySide {
@@ -111,6 +120,8 @@ export function LensApp({
   diffAdapter,
   renderCachePages = 5,
   productProfile,
+  changeSetGenerator,
+  saveChangeSetFile,
 }: LensAppProps) {
   const [original, setOriginal] = useState<LoadedSide>(EMPTY_SIDE);
   const [modified, setModified] = useState<LoadedSide>(EMPTY_SIDE);
@@ -137,6 +148,10 @@ export function LensApp({
     label: `${productProfile.pairNoun}를 선택하세요.`,
   });
   const [performanceReport, setPerformanceReport] = useState<AnalysisPerformanceReport>();
+  const [exportState, setExportState] = useState<{
+    status: "idle" | "preparing" | "saving" | "saved" | "cancelled" | "error";
+    message?: string;
+  }>({ status: "idle" });
   const [targets, setTargets] = useState<{ original: LocatedTarget; modified: LocatedTarget }>({
     original: { contextual: false },
     modified: { contextual: false },
@@ -192,6 +207,7 @@ export function LensApp({
       setSide({
         status: "ready",
         fileName: file.name,
+        sourceFile: file,
         document,
         snapshot,
         complexity,
@@ -564,7 +580,53 @@ export function LensApp({
     setActiveStructureId(undefined);
     setStructureScopeId(undefined);
     setSelectedIndex(0);
+    setExportState({ status: "idle" });
     setAnalysisProgress({ phase: "idle", label: `${productProfile.pairNoun}를 선택하세요.` });
+  }
+
+  async function exportChangeSet() {
+    if (
+      !ready || !original.sourceFile || !modified.sourceFile ||
+      !original.snapshot || !modified.snapshot || !changeSetGenerator || !saveChangeSetFile
+    ) return;
+    if (!window.confirm(CHANGE_SET_PRIVACY_WARNING)) {
+      setExportState({ status: "cancelled", message: "내보내기를 취소했습니다." });
+      return;
+    }
+
+    // Capture one completed comparison before any asynchronous file/save work.
+    const exportSnapshot = {
+      originalFile: original.sourceFile,
+      modifiedFile: modified.sourceFile,
+      originalSnapshot: original.snapshot,
+      modifiedSnapshot: modified.snapshot,
+      changes: [...changes],
+    };
+    try {
+      setExportState({ status: "preparing", message: "Change Set을 검증하고 있습니다." });
+      const prepared = await prepareChangeSetExport({
+        ...exportSnapshot,
+        supportedTypes: diffAdapter.supportedTypes,
+        analysisIdentity: [
+          `diff:${diffAdapter.analysisIdentity}`,
+          `original:${original.document?.analysisIdentity ?? "unavailable"}`,
+          `modified:${modified.document?.analysisIdentity ?? "unavailable"}`,
+        ].join("|"),
+        productProfile: productProfile.id,
+        generator: changeSetGenerator,
+      });
+      setExportState({ status: "saving", message: "저장 위치를 선택하세요." });
+      const result = await saveChangeSetFile({
+        contents: prepared.json,
+        defaultFileName: prepared.defaultFileName,
+      });
+      setExportState(result === "saved"
+        ? { status: "saved", message: "Change Set JSON을 저장했습니다." }
+        : { status: "cancelled", message: "저장을 취소했습니다." });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Change Set JSON을 저장하지 못했습니다.";
+      setExportState({ status: "error", message });
+    }
   }
 
   const closeDetached = useCallback(() => setWorkspaceDetached(false), []);
@@ -618,6 +680,27 @@ export function LensApp({
           <p>{summary}</p>
         </div>
         <div className="app-header__actions">
+          <div className="change-set-export-control">
+            <button
+              type="button"
+              className="export-change-set"
+              disabled={!ready || !changeSetGenerator || !saveChangeSetFile || exportState.status === "preparing" || exportState.status === "saving"}
+              onClick={() => void exportChangeSet()}
+              title="비교 사실과 전체 목차 대응표를 JSON으로 저장"
+            >
+              {exportState.status === "preparing" || exportState.status === "saving"
+                ? "내보내는 중…"
+                : "Change Set JSON 내보내기"}
+            </button>
+            {exportState.message && (
+              <span
+                className={`change-set-export-status change-set-export-status--${exportState.status}`}
+                role={exportState.status === "error" ? "alert" : "status"}
+              >
+                {exportState.message}
+              </span>
+            )}
+          </div>
           <button type="button" className="reset-documents" onClick={resetDocuments}>초기화</button>
           <span className="offline-badge"><i /> OFFLINE</span>
         </div>

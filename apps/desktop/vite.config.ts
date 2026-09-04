@@ -18,6 +18,9 @@ interface BuildProfile {
 }
 
 const repositoryRoot = fileURLToPath(new URL("../..", import.meta.url));
+const applicationVersion = readPackageVersion("apps/desktop/package.json");
+const lensCoreVersion = readPackageVersion("packages/lens-core/package.json");
+const adapterVersion = readPackageVersion("packages/hwpx-adapter/package.json");
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, ".", "");
@@ -46,6 +49,9 @@ export default defineConfig(({ mode }) => {
       "import.meta.env.VITE_HWPX_LENS_PRODUCT_PROFILE_JSON": JSON.stringify(
         localProfile ? JSON.stringify(localProfile) : "",
       ),
+      "import.meta.env.VITE_HWPX_LENS_VERSION": JSON.stringify(applicationVersion),
+      "import.meta.env.VITE_HWPX_LENS_CORE_VERSION": JSON.stringify(lensCoreVersion),
+      "import.meta.env.VITE_HWPX_LENS_ADAPTER_VERSION": JSON.stringify(adapterVersion),
     },
     clearScreen: false,
     server: {
@@ -59,6 +65,16 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
+
+function readPackageVersion(relativePath: string): string {
+  const parsed = JSON.parse(
+    readFileSync(path.resolve(repositoryRoot, relativePath), "utf8"),
+  ) as { version?: unknown };
+  if (typeof parsed.version !== "string" || !parsed.version) {
+    throw new Error(`Package version is missing: ${relativePath}`);
+  }
+  return parsed.version;
+}
 
 function readLocalProfile(profilePath: string): BuildProfile {
   const absolutePath = path.isAbsolute(profilePath)

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.1 — Change Set JSON export
+
+- Added a generic, deterministic Change Set JSON contract backed by the same
+  canonical changes used by Review Ink.
+- Added full outline mapping coverage, typed text/outline/table/image data,
+  semantic anchors, full outline paths, content fingerprints, and confidence.
+- Added deterministic raw-file comparison identity and UTF-8/LF serialization.
+- Added a local desktop save flow with a clear content-sensitivity warning.
+- Added Draft 2020-12 schema, cross-reference/integrity validation, negative
+  contract tests, deterministic repeat-export tests, and offline E2E coverage.
+- Unified the Review Workspace collapse/detach action styling and verified the
+  compact collapse-and-restore interaction.
+- Preserved renderer, comparison, Review Ink, navigation, virtualization,
+  in-memory cache, general product profile, and offline boundaries.
+
 ## 0.1.0 — First Public Alpha candidate
 
 - Added compact `Structure` / `Changes` review workspace and section scoping.

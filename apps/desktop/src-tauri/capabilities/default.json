@@ -12,6 +12,8 @@
     "core:event:allow-emit-to",
     "core:window:allow-show",
     "core:window:allow-set-focus",
-    "core:window:allow-close"
+    "core:window:allow-close",
+    "dialog:allow-save",
+    "fs:allow-write-text-file"
   ]
 }

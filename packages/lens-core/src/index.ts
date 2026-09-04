@@ -1,4 +1,7 @@
 export * from "./document-diff";
+export * from "./change-set";
+export * from "./change-set-types";
+export * from "./change-set-validator";
 export * from "./ephemeral-cache";
 export * from "./image-diff";
 export * from "./outline-diff";

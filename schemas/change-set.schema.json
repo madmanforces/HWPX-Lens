@@ -1,0 +1,538 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hwpx-lens.local/schemas/change-set-1.0.0.schema.json",
+  "title": "HWPX Lens Change Set",
+  "description": "Offline, generic comparison facts. Unknown optional fields may be ignored by compatible 1.x consumers; required fields, enums, types, and conditionals remain strict.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "comparisonId",
+    "exportId",
+    "exportedAt",
+    "generator",
+    "analysis",
+    "coordinateSystem",
+    "fingerprintSpec",
+    "documents",
+    "summary",
+    "changes",
+    "outlineMappings"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "comparisonId": { "type": "string", "pattern": "^cmp-[0-9a-f]{64}$" },
+    "exportId": { "type": "string", "minLength": 1 },
+    "exportedAt": { "type": "string", "format": "date-time" },
+    "generator": { "$ref": "#/$defs/generator" },
+    "analysis": { "$ref": "#/$defs/analysis" },
+    "coordinateSystem": { "$ref": "#/$defs/coordinateSystem" },
+    "fingerprintSpec": { "$ref": "#/$defs/fingerprintSpec" },
+    "documents": { "$ref": "#/$defs/documents" },
+    "summary": { "$ref": "#/$defs/summary" },
+    "changes": { "type": "array", "items": { "$ref": "#/$defs/change" } },
+    "outlineMappings": { "type": "array", "items": { "$ref": "#/$defs/outlineMapping" } }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "fingerprint32": { "type": "string", "pattern": "^[0-9a-f]{8}$" },
+    "nonNegativeInteger": { "type": "integer", "minimum": 0 },
+    "positiveInteger": { "type": "integer", "minimum": 1 },
+    "changeType": { "enum": ["text", "outline", "table", "image"] },
+    "changeKind": { "enum": ["added", "removed", "modified"] },
+    "confidence": { "enum": ["exact", "contextual", "approximate"] },
+    "generator": {
+      "type": "object",
+      "required": ["name", "version", "lensCoreVersion", "adapterName", "adapterVersion", "analysisIdentity", "productProfile"],
+      "properties": {
+        "name": { "const": "HWPX Lens" },
+        "version": { "$ref": "#/$defs/semver" },
+        "lensCoreVersion": { "$ref": "#/$defs/semver" },
+        "adapterName": { "type": "string", "minLength": 1 },
+        "adapterVersion": { "$ref": "#/$defs/semver" },
+        "analysisIdentity": { "type": "string", "minLength": 1 },
+        "productProfile": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "analysis": {
+      "type": "object",
+      "required": ["status", "supportedTypes", "completedTypes", "warnings"],
+      "properties": {
+        "status": { "enum": ["complete", "partial", "failed"] },
+        "supportedTypes": { "type": "array", "items": { "$ref": "#/$defs/changeType" }, "uniqueItems": true },
+        "completedTypes": { "type": "array", "items": { "$ref": "#/$defs/changeType" }, "uniqueItems": true },
+        "warnings": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      },
+      "additionalProperties": true
+    },
+    "coordinateSystem": {
+      "type": "object",
+      "required": ["name", "coordinateBase", "sectionIndexBase", "paragraphIndexBase", "tableIndexBase", "controlIndexBase", "cellIndexBase", "rowIndexBase", "columnIndexBase", "pageIndexBase", "textOffsetUnit", "textRangeStart", "textRangeEnd", "notes"],
+      "properties": {
+        "name": { "const": "lens-semantic-snapshot" },
+        "coordinateBase": { "const": 0 },
+        "sectionIndexBase": { "const": 0 },
+        "paragraphIndexBase": { "const": 0 },
+        "tableIndexBase": { "const": 0 },
+        "controlIndexBase": { "const": 0 },
+        "cellIndexBase": { "const": 0 },
+        "rowIndexBase": { "const": 0 },
+        "columnIndexBase": { "const": 0 },
+        "pageIndexBase": { "const": 0 },
+        "textOffsetUnit": { "const": "utf16-code-unit" },
+        "textRangeStart": { "const": "inclusive" },
+        "textRangeEnd": { "const": "exclusive" },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "fingerprintSpec": {
+      "type": "object",
+      "required": ["document", "text", "table", "imageSource", "imageRendering"],
+      "properties": {
+        "document": {
+          "type": "object",
+          "required": ["algorithm", "input", "hexCase", "version"],
+          "properties": {
+            "algorithm": { "const": "sha256" },
+            "input": { "const": "raw-file-bytes" },
+            "hexCase": { "const": "lowercase" },
+            "version": { "const": "document-sha256-v1" }
+          },
+          "additionalProperties": true
+        },
+        "text": {
+          "type": "object",
+          "required": ["algorithm", "normalization", "normalizationVersion", "hexCase"],
+          "properties": {
+            "algorithm": { "const": "fnv1a-32-js-utf16" },
+            "normalization": { "type": "string", "minLength": 1 },
+            "normalizationVersion": { "const": "lens-text-v1" },
+            "hexCase": { "const": "lowercase" }
+          },
+          "additionalProperties": true
+        },
+        "table": {
+          "type": "object",
+          "required": ["algorithm", "normalizationVersion"],
+          "properties": {
+            "algorithm": { "const": "fnv1a-32-js-utf16" },
+            "normalizationVersion": { "const": "lens-table-v1" }
+          },
+          "additionalProperties": true
+        },
+        "imageSource": {
+          "type": "object",
+          "required": ["algorithm", "input", "hexCase", "version"],
+          "properties": {
+            "algorithm": { "const": "sha256" },
+            "input": { "const": "original-encoded-resource-bytes" },
+            "hexCase": { "const": "lowercase" },
+            "version": { "const": "image-source-v1" }
+          },
+          "additionalProperties": true
+        },
+        "imageRendering": {
+          "type": "object",
+          "required": ["algorithm", "version"],
+          "properties": {
+            "algorithm": { "const": "lens-render-fingerprint" },
+            "version": { "const": "lens-image-render-v1" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "document": {
+      "type": "object",
+      "required": ["documentId", "role", "fileName", "byteLength", "sha256", "mimeType", "sectionCount", "paragraphCount", "outlineCount", "tableCount", "imageCount"],
+      "properties": {
+        "documentId": { "enum": ["doc-original", "doc-modified"] },
+        "role": { "enum": ["previous", "latest"] },
+        "fileName": { "type": "string", "minLength": 1 },
+        "byteLength": { "$ref": "#/$defs/nonNegativeInteger" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "mimeType": { "const": "application/hwp+zip" },
+        "sectionCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "paragraphCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "outlineCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "tableCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "imageCount": { "$ref": "#/$defs/nonNegativeInteger" }
+      },
+      "additionalProperties": true
+    },
+    "documents": {
+      "type": "object",
+      "required": ["original", "modified"],
+      "properties": {
+        "original": {
+          "allOf": [
+            { "$ref": "#/$defs/document" },
+            { "type": "object", "properties": { "documentId": { "const": "doc-original" }, "role": { "const": "previous" } } }
+          ]
+        },
+        "modified": {
+          "allOf": [
+            { "$ref": "#/$defs/document" },
+            { "type": "object", "properties": { "documentId": { "const": "doc-modified" }, "role": { "const": "latest" } } }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "countByKind": {
+      "type": "object",
+      "required": ["added", "removed", "modified"],
+      "properties": {
+        "added": { "$ref": "#/$defs/nonNegativeInteger" },
+        "removed": { "$ref": "#/$defs/nonNegativeInteger" },
+        "modified": { "$ref": "#/$defs/nonNegativeInteger" }
+      },
+      "additionalProperties": true
+    },
+    "countByType": {
+      "type": "object",
+      "required": ["text", "outline", "table", "image"],
+      "properties": {
+        "text": { "$ref": "#/$defs/nonNegativeInteger" },
+        "outline": { "$ref": "#/$defs/nonNegativeInteger" },
+        "table": { "$ref": "#/$defs/nonNegativeInteger" },
+        "image": { "$ref": "#/$defs/nonNegativeInteger" }
+      },
+      "additionalProperties": true
+    },
+    "countByRelation": {
+      "type": "object",
+      "required": ["unchanged", "moved", "renamed", "modified", "added", "removed"],
+      "properties": {
+        "unchanged": { "$ref": "#/$defs/nonNegativeInteger" },
+        "moved": { "$ref": "#/$defs/nonNegativeInteger" },
+        "renamed": { "$ref": "#/$defs/nonNegativeInteger" },
+        "modified": { "$ref": "#/$defs/nonNegativeInteger" },
+        "added": { "$ref": "#/$defs/nonNegativeInteger" },
+        "removed": { "$ref": "#/$defs/nonNegativeInteger" }
+      },
+      "additionalProperties": true
+    },
+    "summary": {
+      "type": "object",
+      "required": ["totalChanges", "byKind", "byType", "outlineMappingCount", "outlineRelations"],
+      "properties": {
+        "totalChanges": { "$ref": "#/$defs/nonNegativeInteger" },
+        "byKind": { "$ref": "#/$defs/countByKind" },
+        "byType": { "$ref": "#/$defs/countByType" },
+        "outlineMappingCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "outlineRelations": { "$ref": "#/$defs/countByRelation" }
+      },
+      "additionalProperties": true
+    },
+    "textRange": {
+      "type": "object",
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "$ref": "#/$defs/nonNegativeInteger" },
+        "end": { "$ref": "#/$defs/nonNegativeInteger" }
+      },
+      "additionalProperties": false
+    },
+    "rect": {
+      "type": "object",
+      "required": ["pageIndex", "x", "y", "width", "height"],
+      "properties": {
+        "pageIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number", "minimum": 0 },
+        "height": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "bodyAnchor": {
+      "type": "object",
+      "required": ["target", "sectionIndex", "paragraphIndex", "confidence"],
+      "properties": {
+        "target": { "const": "body-text" },
+        "sectionIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "paragraphIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "textRange": { "$ref": "#/$defs/textRange" },
+        "textFingerprint": { "$ref": "#/$defs/fingerprint32" },
+        "contextFingerprint": { "$ref": "#/$defs/fingerprint32" },
+        "generatedPrefix": {
+          "type": "object",
+          "required": ["text", "pageIndex"],
+          "properties": {
+            "text": { "type": "string" },
+            "pageIndex": { "$ref": "#/$defs/nonNegativeInteger" }
+          },
+          "additionalProperties": false
+        },
+        "confidence": { "$ref": "#/$defs/confidence" }
+      },
+      "additionalProperties": true
+    },
+    "tableAnchor": {
+      "type": "object",
+      "required": ["target", "sectionIndex", "paragraphIndex", "controlIndex", "tableIndex", "confidence"],
+      "properties": {
+        "target": { "const": "table" },
+        "sectionIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "paragraphIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "controlIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "tableIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "confidence": { "$ref": "#/$defs/confidence" }
+      },
+      "additionalProperties": true
+    },
+    "cellAnchor": {
+      "type": "object",
+      "required": ["target", "sectionIndex", "paragraphIndex", "controlIndex", "tableIndex", "cellIndex", "row", "column", "rowSpan", "columnSpan", "confidence"],
+      "properties": {
+        "target": { "const": "table-cell" },
+        "sectionIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "paragraphIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "controlIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "tableIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "cellIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "row": { "$ref": "#/$defs/nonNegativeInteger" },
+        "column": { "$ref": "#/$defs/nonNegativeInteger" },
+        "rowSpan": { "$ref": "#/$defs/positiveInteger" },
+        "columnSpan": { "$ref": "#/$defs/positiveInteger" },
+        "textFingerprint": { "$ref": "#/$defs/fingerprint32" },
+        "confidence": { "$ref": "#/$defs/confidence" }
+      },
+      "additionalProperties": true
+    },
+    "imageAnchor": {
+      "type": "object",
+      "required": ["target", "sectionIndex", "paragraphIndex", "imageIndex", "stableKey", "rect", "confidence"],
+      "properties": {
+        "target": { "const": "image" },
+        "sectionIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "paragraphIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "imageIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "stableKey": { "type": "string", "minLength": 1 },
+        "rect": { "$ref": "#/$defs/rect" },
+        "confidence": { "$ref": "#/$defs/confidence" }
+      },
+      "additionalProperties": true
+    },
+    "anchor": {
+      "oneOf": [
+        { "$ref": "#/$defs/bodyAnchor" },
+        { "$ref": "#/$defs/tableAnchor" },
+        { "$ref": "#/$defs/cellAnchor" },
+        { "$ref": "#/$defs/imageAnchor" }
+      ]
+    },
+    "pathSegment": {
+      "type": "object",
+      "required": ["level", "number", "title", "displayText"],
+      "properties": {
+        "level": { "$ref": "#/$defs/positiveInteger" },
+        "number": { "type": "string" },
+        "title": { "type": "string" },
+        "displayText": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "outlinePath": {
+      "type": "object",
+      "required": ["pathText", "segments"],
+      "properties": {
+        "pathText": { "type": "string" },
+        "segments": { "type": "array", "items": { "$ref": "#/$defs/pathSegment" } }
+      },
+      "additionalProperties": true
+    },
+    "contentFingerprint": {
+      "type": "object",
+      "required": ["spec", "value"],
+      "properties": {
+        "spec": { "const": "lens-text-v1" },
+        "value": { "$ref": "#/$defs/fingerprint32" }
+      },
+      "additionalProperties": false
+    },
+    "changeSide": {
+      "type": "object",
+      "required": ["anchor", "outlinePath"],
+      "properties": {
+        "text": { "type": "string" },
+        "normalizedText": { "type": "string" },
+        "contentFingerprint": { "$ref": "#/$defs/contentFingerprint" },
+        "anchor": { "$ref": "#/$defs/anchor" },
+        "outlinePath": { "$ref": "#/$defs/outlinePath" }
+      },
+      "additionalProperties": true
+    },
+    "segment": {
+      "type": "object",
+      "required": ["kind", "originalRange", "modifiedRange"],
+      "properties": {
+        "kind": { "enum": ["equal", "added", "removed", "modified"] },
+        "originalRange": { "oneOf": [{ "$ref": "#/$defs/textRange" }, { "type": "null" }] },
+        "modifiedRange": { "oneOf": [{ "$ref": "#/$defs/textRange" }, { "type": "null" }] },
+        "originalBoundary": { "$ref": "#/$defs/nonNegativeInteger" },
+        "modifiedBoundary": { "$ref": "#/$defs/nonNegativeInteger" },
+        "whitespace": { "enum": ["inserted", "removed"] }
+      },
+      "additionalProperties": true
+    },
+    "textData": {
+      "type": "object",
+      "required": ["segments"],
+      "properties": { "segments": { "type": "array", "items": { "$ref": "#/$defs/segment" } } },
+      "additionalProperties": true
+    },
+    "outlineData": {
+      "type": "object",
+      "required": ["level", "outlineRelation"],
+      "properties": {
+        "level": { "$ref": "#/$defs/positiveInteger" },
+        "outlineRelation": { "enum": ["renamed", "outline-added", "outline-removed", "outline-moved"] }
+      },
+      "additionalProperties": true
+    },
+    "tableSummary": {
+      "type": "object",
+      "required": ["rowCount", "columnCount", "structureFingerprint", "contentFingerprint"],
+      "properties": {
+        "rowCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "columnCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "structureFingerprint": { "$ref": "#/$defs/fingerprint32" },
+        "contentFingerprint": { "$ref": "#/$defs/fingerprint32" }
+      },
+      "additionalProperties": true
+    },
+    "cellSummary": {
+      "type": "object",
+      "required": ["cellIndex", "row", "column", "rowSpan", "columnSpan", "text", "fingerprint"],
+      "properties": {
+        "cellIndex": { "$ref": "#/$defs/nonNegativeInteger" },
+        "row": { "$ref": "#/$defs/nonNegativeInteger" },
+        "column": { "$ref": "#/$defs/nonNegativeInteger" },
+        "rowSpan": { "$ref": "#/$defs/positiveInteger" },
+        "columnSpan": { "$ref": "#/$defs/positiveInteger" },
+        "text": { "type": "string" },
+        "fingerprint": { "$ref": "#/$defs/fingerprint32" }
+      },
+      "additionalProperties": true
+    },
+    "tableData": {
+      "type": "object",
+      "required": ["tableDetail", "originalTable", "modifiedTable", "originalCell", "modifiedCell"],
+      "properties": {
+        "tableDetail": { "enum": ["cell-text", "structure", "table-added", "table-removed"] },
+        "originalTable": { "oneOf": [{ "$ref": "#/$defs/tableSummary" }, { "type": "null" }] },
+        "modifiedTable": { "oneOf": [{ "$ref": "#/$defs/tableSummary" }, { "type": "null" }] },
+        "originalCell": { "oneOf": [{ "$ref": "#/$defs/cellSummary" }, { "type": "null" }] },
+        "modifiedCell": { "oneOf": [{ "$ref": "#/$defs/cellSummary" }, { "type": "null" }] }
+      },
+      "allOf": [
+        { "if": { "properties": { "tableDetail": { "const": "cell-text" } }, "required": ["tableDetail"] }, "then": { "properties": { "originalCell": { "$ref": "#/$defs/cellSummary" }, "modifiedCell": { "$ref": "#/$defs/cellSummary" } } } },
+        { "if": { "properties": { "tableDetail": { "const": "table-added" } }, "required": ["tableDetail"] }, "then": { "properties": { "originalTable": { "type": "null" }, "modifiedTable": { "$ref": "#/$defs/tableSummary" } } } },
+        { "if": { "properties": { "tableDetail": { "const": "table-removed" } }, "required": ["tableDetail"] }, "then": { "properties": { "originalTable": { "$ref": "#/$defs/tableSummary" }, "modifiedTable": { "type": "null" } } } }
+      ],
+      "additionalProperties": true
+    },
+    "imageSummary": {
+      "type": "object",
+      "required": ["mimeType", "byteLength", "sourceHash", "renderFingerprint"],
+      "properties": {
+        "mimeType": { "type": "string", "pattern": "^image/" },
+        "byteLength": { "$ref": "#/$defs/nonNegativeInteger" },
+        "sourceHash": { "$ref": "#/$defs/sha256" },
+        "renderFingerprint": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "imageData": {
+      "type": "object",
+      "required": ["binaryChanged", "renderingChanged", "classification", "originalImage", "modifiedImage"],
+      "properties": {
+        "binaryChanged": { "type": "boolean" },
+        "renderingChanged": { "type": "boolean" },
+        "classification": { "enum": ["captioned", "other"] },
+        "captionLabel": { "type": "string" },
+        "originalImage": { "oneOf": [{ "$ref": "#/$defs/imageSummary" }, { "type": "null" }] },
+        "modifiedImage": { "oneOf": [{ "$ref": "#/$defs/imageSummary" }, { "type": "null" }] }
+      },
+      "additionalProperties": true
+    },
+    "change": {
+      "type": "object",
+      "required": ["id", "type", "kind", "detail", "locationLabel", "mappingConfidence", "original", "modified", "originalContextAnchor", "modifiedContextAnchor", "data"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^chg-[0-9]{6}$" },
+        "type": { "$ref": "#/$defs/changeType" },
+        "kind": { "$ref": "#/$defs/changeKind" },
+        "detail": { "type": "string" },
+        "locationLabel": { "type": "string" },
+        "mappingConfidence": { "$ref": "#/$defs/confidence" },
+        "original": { "oneOf": [{ "$ref": "#/$defs/changeSide" }, { "type": "null" }] },
+        "modified": { "oneOf": [{ "$ref": "#/$defs/changeSide" }, { "type": "null" }] },
+        "originalContextAnchor": { "oneOf": [{ "$ref": "#/$defs/anchor" }, { "type": "null" }] },
+        "modifiedContextAnchor": { "oneOf": [{ "$ref": "#/$defs/anchor" }, { "type": "null" }] },
+        "data": { "type": "object" }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "added" } }, "required": ["kind"] }, "then": { "properties": { "original": { "type": "null" }, "modified": { "$ref": "#/$defs/changeSide" } } } },
+        { "if": { "properties": { "kind": { "const": "removed" } }, "required": ["kind"] }, "then": { "properties": { "original": { "$ref": "#/$defs/changeSide" }, "modified": { "type": "null" } } } },
+        { "if": { "properties": { "kind": { "const": "modified" } }, "required": ["kind"] }, "then": { "properties": { "original": { "$ref": "#/$defs/changeSide" }, "modified": { "$ref": "#/$defs/changeSide" } } } },
+        { "if": { "properties": { "type": { "const": "text" } }, "required": ["type"] }, "then": { "properties": { "detail": { "enum": ["content", "whitespace"] }, "data": { "$ref": "#/$defs/textData" } } } },
+        { "if": { "properties": { "type": { "const": "outline" } }, "required": ["type"] }, "then": { "properties": { "detail": { "enum": ["renamed", "outline-added", "outline-removed", "outline-moved"] }, "data": { "$ref": "#/$defs/outlineData" } } } },
+        { "if": { "properties": { "type": { "const": "table" } }, "required": ["type"] }, "then": { "properties": { "detail": { "enum": ["cell-text", "structure", "table-added", "table-removed"] }, "data": { "$ref": "#/$defs/tableData" } } } },
+        { "if": { "properties": { "type": { "const": "image" } }, "required": ["type"] }, "then": { "properties": { "detail": { "enum": ["image-added", "image-removed", "image-changed"] }, "data": { "$ref": "#/$defs/imageData" } } } }
+      ],
+      "additionalProperties": true
+    },
+    "outlineMappingSide": {
+      "type": "object",
+      "required": ["outlineId", "level", "number", "title", "displayText", "titleFingerprint", "contentFingerprint", "anchor", "path"],
+      "properties": {
+        "outlineId": { "type": "string", "pattern": "^(original|modified)-outline-[0-9]{6}$" },
+        "level": { "$ref": "#/$defs/positiveInteger" },
+        "number": { "type": "string" },
+        "title": { "type": "string" },
+        "displayText": { "type": "string" },
+        "titleFingerprint": { "$ref": "#/$defs/fingerprint32" },
+        "contentFingerprint": { "$ref": "#/$defs/fingerprint32" },
+        "anchor": { "$ref": "#/$defs/bodyAnchor" },
+        "path": { "$ref": "#/$defs/outlinePath" }
+      },
+      "additionalProperties": true
+    },
+    "outlineMapping": {
+      "type": "object",
+      "required": ["id", "relations", "mappingConfidence", "matchEvidence", "relatedChangeIds", "original", "modified"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^map-[0-9]{6}$" },
+        "relations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["unchanged", "moved", "renamed", "modified", "added", "removed"] }
+        },
+        "mappingConfidence": { "$ref": "#/$defs/confidence" },
+        "similarity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "matchEvidence": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "relatedChangeIds": { "type": "array", "items": { "type": "string", "pattern": "^chg-[0-9]{6}$" }, "uniqueItems": true },
+        "original": { "oneOf": [{ "$ref": "#/$defs/outlineMappingSide" }, { "type": "null" }] },
+        "modified": { "oneOf": [{ "$ref": "#/$defs/outlineMappingSide" }, { "type": "null" }] }
+      },
+      "allOf": [
+        { "if": { "properties": { "relations": { "type": "array", "contains": { "const": "added" } } }, "required": ["relations"] }, "then": { "properties": { "relations": { "type": "array", "maxItems": 1 }, "original": { "type": "null" }, "modified": { "$ref": "#/$defs/outlineMappingSide" } } } },
+        { "if": { "properties": { "relations": { "type": "array", "contains": { "const": "removed" } } }, "required": ["relations"] }, "then": { "properties": { "relations": { "type": "array", "maxItems": 1 }, "original": { "$ref": "#/$defs/outlineMappingSide" }, "modified": { "type": "null" } } } },
+        { "if": { "properties": { "relations": { "type": "array", "contains": { "const": "unchanged" } } }, "required": ["relations"] }, "then": { "properties": { "relations": { "type": "array", "maxItems": 1 } } } },
+        { "if": { "properties": { "relations": { "type": "array", "not": { "contains": { "enum": ["added", "removed"] } } } }, "required": ["relations"] }, "then": { "properties": { "original": { "$ref": "#/$defs/outlineMappingSide" }, "modified": { "$ref": "#/$defs/outlineMappingSide" } } } }
+      ],
+      "additionalProperties": true
+    }
+  }
+}

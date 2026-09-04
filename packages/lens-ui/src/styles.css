@@ -147,6 +147,44 @@ label:focus-within {
   margin-left: auto;
 }
 
+.change-set-export-control {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.export-change-set {
+  padding: 7px 11px;
+  border: 1px solid var(--green);
+  border-radius: 7px;
+  color: #fff;
+  background: var(--green);
+  font-size: 11px;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+.export-change-set:disabled {
+  border-color: #cfd8d3;
+  color: #84908c;
+  background: #eef2ef;
+  cursor: not-allowed;
+}
+
+.change-set-export-status {
+  max-width: 260px;
+  overflow: hidden;
+  color: #61706b;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.change-set-export-status--error {
+  color: #a33d38;
+}
+
 .offline-badge {
   display: inline-flex;
   align-items: center;
@@ -162,7 +200,7 @@ label:focus-within {
 }
 
 .reset-documents,
-.detach-workspace,
+.review-workspace__action,
 .detached-placeholder button {
   padding: 6px 9px;
   border: 1px solid #cfd8d3;
@@ -171,6 +209,13 @@ label:focus-within {
   background: #fff;
   font-size: 10px;
   cursor: pointer;
+}
+
+.review-workspace__action:hover,
+.review-workspace__action:focus-visible {
+  border-color: #9eb7ac;
+  color: var(--green-deep);
+  background: #eef6f2;
 }
 
 .offline-badge i {
@@ -303,6 +348,14 @@ label:focus-within {
   border: 0;
   color: var(--ink);
   background: var(--surface);
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.review-workspace__expand:hover,
+.review-workspace__expand:focus-visible {
+  color: var(--green-deep);
+  background: #eef6f2;
 }
 
 .review-workspace__expand b {
