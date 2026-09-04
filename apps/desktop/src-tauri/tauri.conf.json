@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "HWPX Lens",
+  "version": "0.1.0",
+  "identifier": "app.hwpx-lens.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+    },
+    "windows": [
+      {
+        "title": "HWPX Lens",
+        "width": 1440,
+        "height": 940,
+        "minWidth": 1040,
+        "minHeight": 700,
+        "resizable": true,
+        "fullscreen": false,
+        "dragDropEnabled": false
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": "nsis",
+    "resources": [
+      "../../../LICENSE",
+      "../../../NOTICE.md",
+      "../../../THIRD_PARTY_NOTICES.md",
+      "../../../licenses/"
+    ],
+    "category": "Productivity",
+    "shortDescription": "Compare and review HWPX documents offline",
+    "longDescription": "Side-by-side semantic text and table comparison with visual change review for HWPX documents.",
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
+  }
+}

@@ -1,0 +1,113 @@
+diff --git a/src/renderer/layout/paragraph_layout.rs b/src/renderer/layout/paragraph_layout.rs
+index 6f919266..58c7c13f 100644
+--- a/src/renderer/layout/paragraph_layout.rs
++++ b/src/renderer/layout/paragraph_layout.rs
+@@ -8270,9 +8270,25 @@ impl LayoutEngine {
+         para: &Paragraph,
+         _counter: &mut super::AutoNumberCounter,
+     ) {
+-        for ctrl in &para.controls {
+-            if let Control::AutoNumber(an) = ctrl {
++        let number_types = [
++            crate::model::control::AutoNumberType::Page,
++            crate::model::control::AutoNumberType::Footnote,
++            crate::model::control::AutoNumberType::Endnote,
++            crate::model::control::AutoNumberType::Picture,
++            crate::model::control::AutoNumberType::Table,
++            crate::model::control::AutoNumberType::Equation,
++            crate::model::control::AutoNumberType::TotalPage,
++        ];
++        let mut replacements = Vec::new();
++
++        for number_type in number_types {
++            let positions = self.auto_number_placeholder_positions(para, number_type);
++            let controls = para.controls.iter().filter_map(|ctrl| match ctrl {
++                Control::AutoNumber(an) if an.number_type == number_type => Some(an),
++                _ => None,
++            });
++
++            for (position, an) in positions.into_iter().zip(controls) {
+                 let num_fmt = NumFmt::from_hwp_format(an.format);
+                 let num_str = format_number(an.assigned_number, num_fmt);
+@@ -8294,24 +8310,15 @@ impl LayoutEngine {
+                 } else {
+                     num_str
+                 };
+-                for line in &mut composed.lines {
+-                    for run in &mut line.runs {
+-                        if let Some(pos) = run.text.find("  ") {
+-                            run.text = format!(
+-                                "{}{}{}",
+-                                &run.text[..pos + 1],
+-                                num_str,
+-                                &run.text[pos + 1..]
+-                            );
+-                            return;
+-                        }
+-                    }
+-                }
++                replacements.push((position, num_str));
+             }
+         }
++
++        replacements.sort_unstable_by_key(|(position, _)| std::cmp::Reverse(*position));
++        for (position, display) in replacements {
++            Self::replace_composed_char_with_display(composed, position, &display);
++        }
+     }
+ }
+diff --git a/src/renderer/layout/tests.rs b/src/renderer/layout/tests.rs
+index 68715431..2f0d1166 100644
+--- a/src/renderer/layout/tests.rs
++++ b/src/renderer/layout/tests.rs
+@@ -254,6 +254,52 @@ fn issue3216_page_auto_number_does_not_expand_manual_page_field_model_text() {
+ }
+ 
++#[test]
++fn caption_auto_number_before_punctuation_uses_control_position() {
++    use crate::model::control::{AutoNumber, AutoNumberType};
++
++    fn assert_caption(number_type: AutoNumberType, prefix: &str) {
++        let text = format!("{prefix}2- . 설명");
++        let hyphen_byte = text.find("- ").unwrap();
++        let placeholder = text[..=hyphen_byte].chars().count();
++        let mut char_offsets = Vec::new();
++        let mut raw_offset = 0u32;
++        for (index, ch) in text.chars().enumerate() {
++            if index == placeholder {
++                raw_offset += 8;
++            }
++            char_offsets.push(raw_offset);
++            raw_offset += ch.len_utf16() as u32;
++        }
++        let para = Paragraph {
++            char_count: raw_offset + 1,
++            text: text.clone(),
++            char_offsets,
++            controls: vec![Control::AutoNumber(AutoNumber {
++                number_type,
++                format: 0,
++                assigned_number: 3,
++                number: 3,
++                ..Default::default()
++            })],
++            ..Default::default()
++        };
++        assert_eq!(para.control_text_positions(), vec![placeholder]);
++        let engine = LayoutEngine::with_default_dpi();
++        let mut composed = compose_paragraph(&para);
++        engine.apply_auto_numbers_to_composed(
++            &mut composed,
++            &para,
++            &mut AutoNumberCounter::new(),
++        );
++        let raw: String = composed.lines.iter().flat_map(|line| &line.runs)
++            .map(|run| run.text.as_str()).collect();
++        let display: String = composed.lines.iter().flat_map(|line| &line.runs)
++            .map(|run| run.display_text.as_deref().unwrap_or(&run.text)).collect();
++        assert_eq!(raw, text);
++        assert_eq!(display, format!("{prefix}2-3. 설명"));
++    }
++    assert_caption(AutoNumberType::Picture, "그림 ");
++    assert_caption(AutoNumberType::Table, "표 ");
++}

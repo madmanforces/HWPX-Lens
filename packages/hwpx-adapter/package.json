@@ -1,0 +1,14 @@
+{
+  "name": "@hwpx-lens/hwpx-adapter",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@hwpx-lens/lens-core": "0.0.1",
+    "@rhwp/core": "0.8.6",
+    "fflate": "^0.8.2"
+  }
+}

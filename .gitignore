@@ -1,0 +1,37 @@
+# Local-only project workspaces
+/prCandidates/
+/meetingForGpt/
+/local-fixtures/
+/private/
+/.codex-remote-attachments/
+/release/
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+*.tsbuildinfo
+/apps/desktop/src-tauri/gen/
+/apps/desktop/src-tauri/target/
+/target/
+
+# Logs and environment files
+*.log
+.env
+.env.*
+!.env.example
+
+# IDE and OS-local state
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Test output
+playwright-report/
+test-results/

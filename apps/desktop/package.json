@@ -1,0 +1,27 @@
+{
+  "name": "@hwpx-lens/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 1420 --strictPort",
+    "prebuild": "npm run prepare:rhwp --prefix ../..",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --port 1420 --strictPort",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "dependencies": {
+    "@hwpx-lens/hwpx-adapter": "0.0.1",
+    "@hwpx-lens/lens-core": "0.0.1",
+    "@hwpx-lens/lens-ui": "0.0.1",
+    "@tauri-apps/api": "^2.11.1",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.11.4",
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9"
+  }
+}

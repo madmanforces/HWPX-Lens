@@ -1,0 +1,9 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/lens-core" },
+    { "path": "packages/hwpx-adapter" },
+    { "path": "packages/lens-ui" },
+    { "path": "apps/desktop" }
+  ]
+}
